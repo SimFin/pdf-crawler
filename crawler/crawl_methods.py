@@ -32,13 +32,13 @@ def get_hrefs_html(response, follow_foreign_hosts=False):
 def get_hrefs_js_simple(response, follow_foreign_hosts=False):
     urls = []
     parsed_response_url = urlparse(response.url)
+    response.html.render()
     urls_on_page = response.html.absolute_links
 
     for url in urls_on_page:
         follow = True
         parsed_url = urlparse(url)
 
-        print(str(parsed_response_url.netloc) + "\t" + parsed_url.netloc)
         if parsed_response_url.netloc != parsed_url.netloc and not follow_foreign_hosts:
             follow = False
 

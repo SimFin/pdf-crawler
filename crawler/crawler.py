@@ -4,7 +4,7 @@ from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs
 
 
 class Crawler:
-    def __init__(self, downloader, get_handlers=None, head_handlers=None, follow_foreign_hosts = False):
+    def __init__(self, downloader, get_handlers=None, head_handlers=None, follow_foreign_hosts = False, crawl_method="normal"):
 
         # Crawler internals
         self.downloader = downloader
@@ -16,6 +16,12 @@ class Crawler:
         self.get_handled = set()
         self.head_handled = set()
         self.follow_foreign = follow_foreign_hosts
+
+        # 3 possible values:
+        # "normal" (default) => simple html crawling (no js),
+        # "rendered" => renders page,
+        # "rendered-all" => renders page and clicks all buttons/other elements to collect all links that only appear when something is clicked (javascript pagination etc.)
+        self.crawl_method = crawl_method
 
     def crawl(self, url, depth, previous_url=None, follow=True):
         response = call(self.session.head, url) or call(self.session.get, url)
@@ -45,19 +51,18 @@ class Crawler:
             if not response:
                 return
             depth -= 1
-            urls = self.get_urls(response, method="html")
+            urls = self.get_urls(response)
             for next_url in tqdm(urls):
                 self.crawl(next_url['url'], depth, previous_url=url, follow=next_url['follow'])
 
-    def get_urls(self, response, method="html"):
-        if method == "html":
-            urls = get_hrefs_html(response,self.follow_foreign)
-        elif method == "javascript":
+    def get_urls(self, response):
+
+        if self.crawl_method == "rendered":
             urls = get_hrefs_js_simple(response,self.follow_foreign)
-        elif method == "javascript_boosted":
+        elif self.crawl_method == "rendered-all":
             urls = get_hrefs_js_complex(response,self.follow_foreign)
         else:
-            print("No valid scrape method.")
-            return
+            # plain html
+            urls = get_hrefs_html(response, self.follow_foreign)
 
         return urls
