@@ -1,7 +1,6 @@
 import logging
 import sys
-
-import click
+from urllib.parse import urlparse
 
 from crawler.crawler import Crawler
 from crawler.downloaders import RequestsDownloader
@@ -19,27 +18,19 @@ logging.basicConfig(
 requests_downloader = RequestsDownloader()
 
 
-@click.command()
-@click.argument('url')
-@click.option('--depth', '-d', type=int)
-@click.option('--pdfs-dir')
-@click.option('--pdfs-subdir')
-@click.option('--stats-dir')
-@click.option('--stats-name')
-@click.option('--method')
-def crawl(url, depth,
-          pdfs_dir=None, pdfs_subdir=None,
-          stats_dir=None, stats_name=None, method="normal"):
+def crawl(url, output_dir, depth=2, method="normal", gecko_path="geckodriver", page_name=None):
     head_handlers = {}
     get_handlers = {}
 
-    if pdfs_dir:
-        get_handlers['application/pdf'] = LocalStoragePDFHandler(
-            directory=pdfs_dir, subdirectory=pdfs_subdir)
+    # get name of page for sub-directories etc. if not custom name given
+    if page_name is None:
+        page_name = urlparse(url).netloc
 
-    if stats_dir:
-        head_handlers['application/pdf'] = CSVStatsPDFHandler(
-            directory=stats_dir, name=stats_name)
+    get_handlers['application/pdf'] = LocalStoragePDFHandler(
+        directory=output_dir, subdirectory=page_name)
+
+    head_handlers['application/pdf'] = CSVStatsPDFHandler(
+        directory=output_dir, name=page_name)
 
     if not get_handlers and not head_handlers:
         raise ValueError('You did not specify any output')
@@ -49,6 +40,7 @@ def crawl(url, depth,
         head_handlers=head_handlers,
         get_handlers=get_handlers,
         follow_foreign_hosts=False,
-        crawl_method=method
+        crawl_method=method,
+        gecko_path=gecko_path
     )
     crawler.crawl(url, depth)

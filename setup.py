@@ -9,6 +9,8 @@ setup(
         'fake_useragent',
         'requests',
         'tqdm',
+        'selenium',
+        'requests_html'
     ],
     extras_require={
         'tests': [

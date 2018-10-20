@@ -52,14 +52,14 @@ def get_hrefs_js_simple(response, follow_foreign_hosts=False):
     return handle_url_list_js(urls_on_page, parsed_response_url, follow_foreign_hosts)
 
 
-def get_hrefs_js_complex(response, follow_foreign_hosts=False):
+def get_hrefs_js_complex(response, follow_foreign_hosts=False, executable_path='geckodriver'):
     urls = []
     parsed_response_url = urlparse(response.url)
 
     # Configure driver options
     driver_options = Options()
     driver_options.headless = True
-    driver = webdriver.Firefox(executable_path="/Applications/MAMP/htdocs/simfin-ml/pdf-crawler/geckodriver", options=driver_options)
+    driver = webdriver.Firefox(executable_path=executable_path, options=driver_options)
 
     # Open url
     driver.get(response.url)

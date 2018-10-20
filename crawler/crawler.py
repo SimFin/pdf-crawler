@@ -4,7 +4,7 @@ from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs
 
 
 class Crawler:
-    def __init__(self, downloader, get_handlers=None, head_handlers=None, follow_foreign_hosts=False, crawl_method="normal"):
+    def __init__(self, downloader, get_handlers=None, head_handlers=None, follow_foreign_hosts=False, crawl_method="normal", gecko_path = "geckodriver"):
 
         # Crawler internals
         self.downloader = downloader
@@ -16,6 +16,7 @@ class Crawler:
         self.get_handled = set()
         self.head_handled = set()
         self.follow_foreign = follow_foreign_hosts
+        self.executable_path_gecko = gecko_path
 
         # 3 possible values:
         # "normal" (default) => simple html crawling (no js),
@@ -60,7 +61,7 @@ class Crawler:
         if self.crawl_method == "rendered":
             urls = get_hrefs_js_simple(response, self.follow_foreign)
         elif self.crawl_method == "rendered-all":
-            urls = get_hrefs_js_complex(response, self.follow_foreign)
+            urls = get_hrefs_js_complex(response, self.follow_foreign,self.executable_path_gecko)
         else:
             # plain html
             if self.crawl_method is not None and self.crawl_method != "normal":
