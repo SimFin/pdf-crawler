@@ -1,6 +1,6 @@
 from tqdm import tqdm
 from crawler.helper import get_content_type, ensure_get_response, call
-from crawler.crawl_methods import get_hrefs_html, get_hrefs_js, get_hrefs_js_boosted
+from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs_js_complex
 
 
 class Crawler:
@@ -53,9 +53,9 @@ class Crawler:
         if method == "html":
             urls = get_hrefs_html(response,self.follow_foreign)
         elif method == "javascript":
-            urls = get_hrefs_js(response,self.follow_foreign)
+            urls = get_hrefs_js_simple(response,self.follow_foreign)
         elif method == "javascript_boosted":
-            urls = get_hrefs_js_boosted(response,self.follow_foreign)
+            urls = get_hrefs_js_complex(response,self.follow_foreign)
         else:
             print("No valid scrape method.")
             return

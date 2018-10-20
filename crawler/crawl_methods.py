@@ -29,7 +29,7 @@ def get_hrefs_html(response, follow_foreign_hosts=False):
     return urls
 
 
-def get_hrefs_js(response, follow_foreign_hosts=False):
+def get_hrefs_js_simple(response, follow_foreign_hosts=False):
     urls = []
     parsed_response_url = urlparse(response.url)
     urls_on_page = response.html.absolute_links
@@ -47,7 +47,7 @@ def get_hrefs_js(response, follow_foreign_hosts=False):
     return urls
 
 
-def get_hrefs_js_boosted(response, follow_foreign_hosts=False):
+def get_hrefs_js_complex(response, follow_foreign_hosts=False):
     urls = []
     parsed_response_url = urlparse(response.url)
 
