@@ -1,13 +1,12 @@
 import random
-
-import requests
 from fake_useragent import UserAgent
+from requests_html import HTMLSession
 
 
 class RequestsDownloader:
 
     def session(self):
-        session = requests.Session()
+        session = HTMLSession()
         session.headers = self._get_fake_headers()
         return session
 
