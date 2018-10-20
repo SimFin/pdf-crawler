@@ -26,9 +26,10 @@ requests_downloader = RequestsDownloader()
 @click.option('--pdfs-subdir')
 @click.option('--stats-dir')
 @click.option('--stats-name')
+@click.option('--method')
 def crawl(url, depth,
           pdfs_dir=None, pdfs_subdir=None,
-          stats_dir=None, stats_name=None):
+          stats_dir=None, stats_name=None, method="normal"):
     head_handlers = {}
     get_handlers = {}
 
@@ -47,5 +48,7 @@ def crawl(url, depth,
         downloader=requests_downloader,
         head_handlers=head_handlers,
         get_handlers=get_handlers,
+        follow_foreign_hosts=False,
+        crawl_method=method
     )
     crawler.crawl(url, depth)

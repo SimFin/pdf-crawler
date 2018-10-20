@@ -29,13 +29,10 @@ def get_hrefs_html(response, follow_foreign_hosts=False):
     return urls
 
 
-def get_hrefs_js_simple(response, follow_foreign_hosts=False):
+def handle_url_list_js(url_list, parsed_response_url, follow_foreign_hosts):
     urls = []
-    parsed_response_url = urlparse(response.url)
-    response.html.render()
-    urls_on_page = response.html.absolute_links
 
-    for url in urls_on_page:
+    for url in url_list:
         follow = True
         parsed_url = urlparse(url)
 
@@ -47,6 +44,14 @@ def get_hrefs_js_simple(response, follow_foreign_hosts=False):
     return urls
 
 
+def get_hrefs_js_simple(response, follow_foreign_hosts=False):
+    parsed_response_url = urlparse(response.url)
+    response.html.render()
+    urls_on_page = response.html.absolute_links
+
+    return handle_url_list_js(urls_on_page, parsed_response_url, follow_foreign_hosts)
+
+
 def get_hrefs_js_complex(response, follow_foreign_hosts=False):
     urls = []
     parsed_response_url = urlparse(response.url)
@@ -54,7 +59,7 @@ def get_hrefs_js_complex(response, follow_foreign_hosts=False):
     # Configure driver options
     driver_options = Options()
     driver_options.headless = True
-    driver = webdriver.Firefox(options=driver_options)
+    driver = webdriver.Firefox(executable_path="/Applications/MAMP/htdocs/simfin-ml/pdf-crawler/geckodriver", options=driver_options)
 
     # Open url
     driver.get(response.url)
@@ -72,19 +77,21 @@ def get_hrefs_js_complex(response, follow_foreign_hosts=False):
     # Repeat the following until there is no javascript element to click on
     # 1. Get urls of the page
     # 2. Click on one of the javascript elements
-    for i in range(len(clickable_elements)):
 
+    if len(clickable_elements) == 0:
         urls_on_page = [link.get_attribute("href") for link in \
                         driver.find_elements_by_css_selector("a") \
                         if len(link.get_attribute("href")) > 0]
-        for url in urls_on_page:
-            follow = False
-            parsed_url = urlparse(url)
+        driver.close()
 
-            if parsed_response_url.netloc != parsed_url.netloc and not follow_foreign_hosts:
-                follow = False
+        return handle_url_list_js(urls_on_page, parsed_response_url, follow_foreign_hosts)
 
-            urls.append({"url": url, "follow": follow})
+    for i in range(len(clickable_elements)):
+        urls_on_page = [link.get_attribute("href") for link in \
+                        driver.find_elements_by_css_selector("a") \
+                        if len(link.get_attribute("href")) > 0]
+
+        urls += handle_url_list_js(urls_on_page, parsed_response_url, follow_foreign_hosts)
 
         clickable_elements[i].click()
 
