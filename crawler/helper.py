@@ -26,7 +26,7 @@ def call(func, url):
 	try:
 		response = func(url)
 		response.raise_for_status()
-	except request.RequestException:
+	except Exception:
 		return None
 	else:
 		return response
