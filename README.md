@@ -12,7 +12,7 @@ We use this crawler to gather PDFs from company websites to find financial repor
 How to install pdf-extractor for development.
 
 ```bash
-$ git clone git@github.com:SimFin/pdf-crawler.git
+$ git clone https://github.com/SimFin/pdf-crawler.git
 $ cd pdf-crawler
 
 # Make a virtual environment with the tool of your choice. Please use Python version 3.6+
