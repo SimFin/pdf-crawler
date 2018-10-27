@@ -19,7 +19,7 @@ $ cd pdf-crawler
 # Here an example based on pyenv:
 $ pyenv virtualenv 3.6.6 pdf-crawler
 
-$ pip install -e .[tests]
+$ pip install -e .
 
 ```
 
