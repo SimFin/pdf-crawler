@@ -1,3 +1,6 @@
+import os
+import csv
+
 from tqdm import tqdm
 from crawler.helper import get_content_type, ensure_get_response, call
 from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs_js_complex
@@ -23,6 +26,18 @@ class Crawler:
         # "rendered" => renders page,
         # "rendered-all" => renders page and clicks all buttons/other elements to collect all links that only appear when something is clicked (javascript pagination etc.)
         self.crawl_method = crawl_method
+
+        # load already handled files from folder if available
+        for k,Handler in self.head_handlers.items():
+            if Handler.name:
+                file_name = os.path.join(Handler.directory, Handler.name + '.csv')
+                if os.path.isfile(file_name):
+                    with open(file_name, newline='') as csvfile:
+                        reader = csv.reader(csvfile)
+                        for k,row in enumerate(reader):
+                            if k > 0:
+                                self.get_handled.add(row[2])
+                                self.head_handled.add(row[2])
 
     def crawl(self, url, depth, previous_url=None, follow=True):
         response = call(self.session.head, url) or call(self.session.get, url)
