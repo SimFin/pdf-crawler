@@ -7,7 +7,7 @@ from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs
 
 
 class Crawler:
-    def __init__(self, downloader, get_handlers=None, head_handlers=None, follow_foreign_hosts=False, crawl_method="normal", gecko_path = "geckodriver"):
+    def __init__(self, downloader, get_handlers=None, head_handlers=None, follow_foreign_hosts=False, crawl_method="normal", gecko_path="geckodriver"):
 
         # Crawler internals
         self.downloader = downloader
@@ -28,16 +28,11 @@ class Crawler:
         self.crawl_method = crawl_method
 
         # load already handled files from folder if available
-        for k,Handler in self.head_handlers.items():
-            if Handler.name:
-                file_name = os.path.join(Handler.directory, Handler.name + '.csv')
-                if os.path.isfile(file_name):
-                    with open(file_name, newline='') as csvfile:
-                        reader = csv.reader(csvfile)
-                        for k,row in enumerate(reader):
-                            if k > 0:
-                                self.get_handled.add(row[2])
-                                self.head_handled.add(row[2])
+        for k, Handler in self.head_handlers.items():
+            handled_list = Handler.get_handled_list()
+            for handled_entry in handled_list:
+                self.get_handled.add(handled_entry)
+                self.head_handled.add(handled_entry)
 
     def crawl(self, url, depth, previous_url=None, follow=True):
         response = call(self.session.head, url) or call(self.session.get, url)
@@ -76,7 +71,7 @@ class Crawler:
         if self.crawl_method == "rendered":
             urls = get_hrefs_js_simple(response, self.follow_foreign)
         elif self.crawl_method == "rendered-all":
-            urls = get_hrefs_js_complex(response, self.follow_foreign,self.executable_path_gecko)
+            urls = get_hrefs_js_complex(response, self.follow_foreign, self.executable_path_gecko)
         else:
             # plain html
             if self.crawl_method is not None and self.crawl_method != "normal":

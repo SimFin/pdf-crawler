@@ -18,7 +18,7 @@ logging.basicConfig(
 requests_downloader = RequestsDownloader()
 
 
-def crawl(url, output_dir, depth=2, method="normal", gecko_path="geckodriver", page_name=None):
+def crawl(url, output_dir, depth=2, method="normal", gecko_path="geckodriver", page_name=None, custom_stats_handler=None):
     head_handlers = {}
     get_handlers = {}
 
@@ -29,8 +29,7 @@ def crawl(url, output_dir, depth=2, method="normal", gecko_path="geckodriver", p
     get_handlers['application/pdf'] = LocalStoragePDFHandler(
         directory=output_dir, subdirectory=page_name)
 
-    head_handlers['application/pdf'] = CSVStatsPDFHandler(
-        directory=output_dir, name=page_name)
+    head_handlers['application/pdf'] = CSVStatsPDFHandler(directory=output_dir, name=page_name) if custom_stats_handler is None else custom_stats_handler
 
     if not get_handlers and not head_handlers:
         raise ValueError('You did not specify any output')

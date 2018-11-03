@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 
 
 class LocalStoragePDFHandler:
-
     def __init__(self, directory, subdirectory):
         self.directory = directory
         self.subdirectory = subdirectory
@@ -25,13 +24,24 @@ class LocalStoragePDFHandler:
 
 
 class CSVStatsPDFHandler:
-
-    _FIELDNAMES = ['filename', 'local_name','url', 'linking_page_url', 'size', 'depth']
+    _FIELDNAMES = ['filename', 'local_name', 'url', 'linking_page_url', 'size', 'depth']
 
     def __init__(self, directory, name):
         self.directory = directory
         self.name = name
         os.makedirs(directory, exist_ok=True)
+
+    def get_handled_list(self):
+        list_handled = []
+        if self.name:
+            file_name = os.path.join(self.directory, self.name + '.csv')
+            if os.path.isfile(file_name):
+                with open(file_name, newline='') as csvfile:
+                    reader = csv.reader(csvfile)
+                    for k, row in enumerate(reader):
+                        if k > 0:
+                            list_handled.append(row[2])
+        return list_handled
 
     def handle(self, response, depth, previous_url, local_name, *args, **kwargs):
         parsed_url = urlparse(response.url)
@@ -58,7 +68,8 @@ class CSVStatsPDFHandler:
 def _get_filename(parsed_url):
     filename = parsed_url.path.split('/')[-1]
     if parsed_url.query:
-        filename += f'_{parsed_url.query}'
+        filename += f
+        '_{parsed_url.query}'
     if not filename.lower().endswith(".pdf"):
         filename += ".pdf"
     return filename.replace('%20', '_')
@@ -67,6 +78,7 @@ def _get_filename(parsed_url):
 def _ensure_unique(path):
     if os.path.isfile(path):
         short_uuid = str(uuid.uuid4())[:8]
-        path = path.replace('.pdf', f'-{short_uuid}.pdf')
+        path = path.replace('.pdf', f
+        '-{short_uuid}.pdf')
         return _ensure_unique(path)
     return path
