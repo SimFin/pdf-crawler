@@ -78,7 +78,6 @@ def _get_filename(parsed_url):
 def _ensure_unique(path):
     if os.path.isfile(path):
         short_uuid = str(uuid.uuid4())[:8]
-        path = path.replace('.pdf', f
-        '-{short_uuid}.pdf')
+        path = path.replace('.pdf', f'-{short_uuid}.pdf')
         return _ensure_unique(path)
     return path
