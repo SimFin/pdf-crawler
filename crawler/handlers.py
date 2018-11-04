@@ -68,8 +68,7 @@ class CSVStatsPDFHandler:
 def _get_filename(parsed_url):
     filename = parsed_url.path.split('/')[-1]
     if parsed_url.query:
-        filename += f
-        '_{parsed_url.query}'
+        filename += f'_{parsed_url.query}'
     if not filename.lower().endswith(".pdf"):
         filename += ".pdf"
     return filename.replace('%20', '_')
