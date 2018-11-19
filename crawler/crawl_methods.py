@@ -76,16 +76,20 @@ def make_element_id(element):
 
     css_properties = ["font-size","font-weight","margin","padding","color","position","display"]
 
-    id_str += "text="+str(element.text)+";"
+    try:
+        id_str += "text="+str(element.text)+";"
 
-    for k,s in element.size.items():
-        id_str += str(k)+"="+str(s)+";"
+        for k,s in element.size.items():
+            id_str += str(k)+"="+str(s)+";"
 
-    for k,s in element.location_once_scrolled_into_view.items():
-        id_str += str(k)+"="+str(s)+";"
+        for k,s in element.location_once_scrolled_into_view.items():
+            id_str += str(k)+"="+str(s)+";"
 
-    for k in css_properties:
-        id_str += str(k) + "=" + str(element.value_of_css_property(k)) + ";"
+        for k in css_properties:
+            id_str += str(k) + "=" + str(element.value_of_css_property(k)) + ";"
+
+    except Exception:
+        return None
 
     return id_str
 
@@ -120,7 +124,7 @@ def find_next_clickable_element(driver,main_url,handled,executable_path,tried_re
         for k, element in enumerate(elements):
             if element.size['height'] > 0 and element.size['width'] > 0 and not is_valid_link(element.get_attribute("href")) and element.value_of_css_property("cursor") == "pointer" and element.value_of_css_property("display") != "none":
                 el_id = make_element_id(element)
-                if el_id not in handled:
+                if el_id not in handled and el_id is not None:
                     return element,el_id,driver
 
     except InvalidSessionIdException:
