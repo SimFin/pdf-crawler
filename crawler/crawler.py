@@ -46,16 +46,16 @@ class Crawler:
         local_name = None
 
         get_handler = self.get_handlers.get(content_type)
-        if get_handler and url not in self.get_handled:
+        if get_handler and response.url not in self.get_handled:
             response = ensure_get_response(response, self.session)
             if response:
                 local_name = get_handler.handle(response)
-                self.get_handled.add(url)
+                self.get_handled.add(response.url)
 
         head_handler = self.head_handlers.get(content_type)
-        if head_handler and url not in self.head_handled:
+        if head_handler and response.url not in self.head_handled:
             head_handler.handle(response, depth, previous_url, local_name)
-            self.head_handled.add(url)
+            self.head_handled.add(response.url)
 
         if content_type == "text/html" and depth and follow:
             response = ensure_get_response(response, self.session)
