@@ -58,8 +58,11 @@ def handle_url_list_js(output_list, new_urls, parsed_response_url, follow_foreig
 
 def get_hrefs_js_simple(response, follow_foreign_hosts=False):
     parsed_response_url = urlparse(response.url)
-    response.html.render()
-    urls_on_page = response.html.absolute_links
+    try:
+        response.html.render()
+        urls_on_page = response.html.absolute_links
+    except Exception:
+        urls_on_page = []
 
     return handle_url_list_js([], urls_on_page, parsed_response_url, follow_foreign_hosts)
 
