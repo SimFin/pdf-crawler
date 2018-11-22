@@ -1,7 +1,6 @@
 import os
 import csv
 
-from tqdm import tqdm
 from crawler.helper import get_content_type, ensure_get_response, call
 from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs_js_complex
 

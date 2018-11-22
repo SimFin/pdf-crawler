@@ -8,7 +8,6 @@ setup(
         'click',
         'fake_useragent',
         'requests',
-        'tqdm',
         'selenium',
         'requests_html'
     ],
