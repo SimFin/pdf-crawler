@@ -16,10 +16,11 @@ class Crawler:
         self.session = self.downloader.session()
 
         # Crawler information
-        self.get_handled = set()
-        self.head_handled = set()
+        self.handled = set()
         self.follow_foreign = follow_foreign_hosts
         self.executable_path_gecko = gecko_path
+        # these file endings are excluded to speed up the crawling (assumed that urls ending with these strings are actual files)
+        self.file_endings_exclude = [".mp3",".wav",".mkv",".flv",".vob",".ogv",".ogg",".gif",".avi",".mov",".wmv",".mp4",".mp3",".mpg"]
 
         # 3 possible values:
         # "normal" (default) => simple html crawling (no js),
@@ -31,13 +32,18 @@ class Crawler:
         for k, Handler in self.head_handlers.items():
             handled_list = Handler.get_handled_list()
             for handled_entry in handled_list:
-                self.get_handled.add(handled_entry)
-                self.head_handled.add(handled_entry)
+                self.handled.add(handled_entry)
 
     def crawl(self, url, depth, previous_url=None, follow=True):
+
+        if url in self.handled or url[-4:] in self.file_endings_exclude:
+            return
+
         response = call(self.session.head, url) or call(self.session.get, url)
         if not response:
             return
+
+        print(url)
 
         # Type of content on page at url
         content_type = get_content_type(response)
@@ -46,16 +52,16 @@ class Crawler:
         local_name = None
 
         get_handler = self.get_handlers.get(content_type)
-        if get_handler and response.url not in self.get_handled:
+        if get_handler:
             response = ensure_get_response(response, self.session)
             if response:
                 local_name = get_handler.handle(response)
-                self.get_handled.add(response.url)
 
         head_handler = self.head_handlers.get(content_type)
-        if head_handler and response.url not in self.head_handled:
+        if head_handler:
             head_handler.handle(response, depth, previous_url, local_name)
-            self.head_handled.add(response.url)
+
+        self.handled.add(response.url)
 
         if content_type == "text/html" and depth and follow:
             response = ensure_get_response(response, self.session)
@@ -63,7 +69,7 @@ class Crawler:
                 return
             depth -= 1
             urls = self.get_urls(response)
-            for next_url in tqdm(urls):
+            for next_url in urls:
                 self.crawl(next_url['url'], depth, previous_url=url, follow=next_url['follow'])
 
     def get_urls(self, response):
