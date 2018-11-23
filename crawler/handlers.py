@@ -11,7 +11,7 @@ class LocalStoragePDFHandler:
 
     def handle(self, response, *args, **kwargs):
         parsed = urlparse(response.url)
-        filename = _get_filename(parsed)
+        filename = get_filename(parsed)
         subdirectory = self.subdirectory or parsed.netloc
         directory = os.path.join(self.directory, subdirectory)
         os.makedirs(directory, exist_ok=True)
@@ -53,7 +53,7 @@ class CSVStatsPDFHandler:
 
         with open(output, 'a') as file:
             writer = csv.DictWriter(file, self._FIELDNAMES)
-            filename = _get_filename(parsed_url)
+            filename = get_filename(parsed_url)
             row = {
                 'filename': filename,
                 'local_name': local_name,
@@ -65,13 +65,18 @@ class CSVStatsPDFHandler:
             writer.writerow(row)
 
 
-def _get_filename(parsed_url):
+def get_filename(parsed_url):
     filename = parsed_url.path.split('/')[-1]
     if parsed_url.query:
         filename += f'_{parsed_url.query}'
     if not filename.lower().endswith(".pdf"):
         filename += ".pdf"
-    return filename.replace('%20', '_')
+    filename = filename.replace('%20', '_')
+
+    if len(filename) >= 255:
+        filename = str(uuid.uuid4())[:8]+".pdf"
+
+    return filename
 
 
 def _ensure_unique(path):
