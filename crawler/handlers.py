@@ -11,7 +11,7 @@ class LocalStoragePDFHandler:
 
     def handle(self, response, *args, **kwargs):
         parsed = urlparse(response.url)
-        filename = get_filename(parsed)
+        filename = str(uuid.uuid4())+".pdf"
         subdirectory = self.subdirectory or parsed.netloc
         directory = os.path.join(self.directory, subdirectory)
         os.makedirs(directory, exist_ok=True)
