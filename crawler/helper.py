@@ -24,7 +24,7 @@ def ensure_get_response(response, session):
 @lru_cache(maxsize=8192)
 def call(func, url):
 	try:
-		response = func(url)
+		response = func(url,timeout=5)
 		response.raise_for_status()
 	except Exception:
 		return None
