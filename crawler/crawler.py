@@ -1,5 +1,6 @@
 import os
 import csv
+import re
 
 from crawler.helper import get_content_type, ensure_get_response, call
 from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs_js_complex
@@ -35,14 +36,14 @@ class Crawler:
 
     def crawl(self, url, depth, previous_url=None, follow=True):
 
+        url = clean_url(url)
+
         if url in self.handled or url[-4:] in self.file_endings_exclude:
             return
 
         response = call(self.session.head, url) or call(self.session.get, url)
         if not response:
             return
-
-        print(url)
 
         # Type of content on page at url
         content_type = get_content_type(response)
@@ -60,16 +61,18 @@ class Crawler:
         if head_handler:
             head_handler.handle(response, depth, previous_url, local_name)
 
-        self.handled.add(response.url)
-
-        if content_type == "text/html" and depth and follow:
-            response = ensure_get_response(response, self.session)
-            if not response:
-                return
-            depth -= 1
-            urls = self.get_urls(response)
-            for next_url in urls:
-                self.crawl(next_url['url'], depth, previous_url=url, follow=next_url['follow'])
+        if content_type == "text/html":
+            if depth and follow:
+                response = ensure_get_response(response, self.session)
+                if not response:
+                    return
+                depth -= 1
+                urls = self.get_urls(response)
+                self.handled.add(response.url)
+                for next_url in urls:
+                    self.crawl(next_url['url'], depth, previous_url=url, follow=next_url['follow'])
+        else:
+            self.handled.add(response.url)
 
     def get_urls(self, response):
 
@@ -84,3 +87,22 @@ class Crawler:
             urls = get_hrefs_html(response, self.follow_foreign)
 
         return urls
+
+
+def clean_url(url):
+
+    # clean text anchor from urls if available
+    pattern = r'(.+)(\/#[a-zA-Z0-9]+)$'
+    m = re.match(pattern, url)
+
+    if m:
+        return m.group(1)
+    else:
+        # clean trailing slash if available
+        pattern = r'(.+)(\/)$'
+        m = re.match(pattern, url)
+
+        if m:
+            return m.group(1)
+
+    return url
