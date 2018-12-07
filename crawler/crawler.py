@@ -2,7 +2,7 @@ import os
 import csv
 import re
 
-from crawler.helper import get_content_type, ensure_get_response, call
+from crawler.helper import get_content_type, call
 from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs_js_complex
 
 
@@ -32,7 +32,7 @@ class Crawler:
         for k, Handler in self.head_handlers.items():
             handled_list = Handler.get_handled_list()
             for handled_entry in handled_list:
-                self.handled.add(handled_entry)
+                self.handled.add(clean_url(handled_entry))
 
     def crawl(self, url, depth, previous_url=None, follow=True):
 
@@ -41,8 +41,13 @@ class Crawler:
         if url in self.handled or url[-4:] in self.file_endings_exclude:
             return
 
-        response = call(self.session.head, url) or call(self.session.get, url)
+        response = call(self.session.get, url)
         if not response:
+            return
+
+        final_url = clean_url(response.url)
+
+        if final_url in self.handled or final_url[-4:] in self.file_endings_exclude:
             return
 
         # Type of content on page at url
@@ -53,9 +58,7 @@ class Crawler:
 
         get_handler = self.get_handlers.get(content_type)
         if get_handler:
-            response = ensure_get_response(response, self.session)
-            if response:
-                local_name = get_handler.handle(response)
+            local_name = get_handler.handle(response)
 
         head_handler = self.head_handlers.get(content_type)
         if head_handler:
@@ -63,16 +66,13 @@ class Crawler:
 
         if content_type == "text/html":
             if depth and follow:
-                response = ensure_get_response(response, self.session)
-                if not response:
-                    return
                 depth -= 1
                 urls = self.get_urls(response)
-                self.handled.add(response.url)
+                self.handled.add(final_url)
                 for next_url in urls:
                     self.crawl(next_url['url'], depth, previous_url=url, follow=next_url['follow'])
         else:
-            self.handled.add(response.url)
+            self.handled.add(final_url)
 
     def get_urls(self, response):
 
