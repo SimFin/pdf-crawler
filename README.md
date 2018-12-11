@@ -5,6 +5,8 @@ You specify a starting page and all pages that link from that page are crawled (
 
 Can crawl files "hidden" with javascript too (the crawler can render the page and click on all elements to make new links appear).
 
+Built in proxy support.
+
 We use this crawler to gather PDFs from company websites to find financial reports that are then uploaded to SimFin, but can be used for other documents too.
 
 # Development

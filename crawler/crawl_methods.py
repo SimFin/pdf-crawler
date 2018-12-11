@@ -59,7 +59,7 @@ def handle_url_list_js(output_list, new_urls, parsed_response_url, follow_foreig
 def get_hrefs_js_simple(response, follow_foreign_hosts=False):
     parsed_response_url = urlparse(response.url)
     try:
-        response.html.render()
+        response.html.render(reload=False)
         urls_on_page = response.html.absolute_links
     except Exception:
         urls_on_page = []

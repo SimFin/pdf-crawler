@@ -1,8 +1,5 @@
-import os
-import csv
-import re
 
-from crawler.helper import get_content_type, call
+from crawler.helper import get_content_type, call, clean_url
 from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs_js_complex
 
 
@@ -41,7 +38,7 @@ class Crawler:
         if url in self.handled or url[-4:] in self.file_endings_exclude:
             return
 
-        response = call(self.session.get, url)
+        response = call(self.session, url)
         if not response:
             return
 
@@ -49,6 +46,8 @@ class Crawler:
 
         if final_url in self.handled or final_url[-4:] in self.file_endings_exclude:
             return
+
+        print(final_url)
 
         # Type of content on page at url
         content_type = get_content_type(response)
@@ -88,21 +87,3 @@ class Crawler:
 
         return urls
 
-
-def clean_url(url):
-
-    # clean text anchor from urls if available
-    pattern = r'(.+)(\/#[a-zA-Z0-9]+)$'
-    m = re.match(pattern, url)
-
-    if m:
-        return m.group(1)
-    else:
-        # clean trailing slash if available
-        pattern = r'(.+)(\/)$'
-        m = re.match(pattern, url)
-
-        if m:
-            return m.group(1)
-
-    return url
