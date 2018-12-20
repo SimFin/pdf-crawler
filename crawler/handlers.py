@@ -2,6 +2,7 @@ import csv
 import os
 import uuid
 from urllib.parse import urlparse
+import psutil
 
 
 class LocalStoragePDFHandler:
@@ -11,7 +12,7 @@ class LocalStoragePDFHandler:
 
     def handle(self, response, *args, **kwargs):
         parsed = urlparse(response.url)
-        filename = str(uuid.uuid4())+".pdf"
+        filename = str(uuid.uuid4()) + ".pdf"
         subdirectory = self.subdirectory or parsed.netloc
         directory = os.path.join(self.directory, subdirectory)
         os.makedirs(directory, exist_ok=True)
@@ -65,6 +66,30 @@ class CSVStatsPDFHandler:
             writer.writerow(row)
 
 
+class ProcessHandler:
+
+    def __init__(self):
+        self.process_list = []
+
+    def register_new_process(self, pid):
+        self.process_list.append(int(pid))
+
+    def kill_all(self):
+
+        # kill all current processes in list as well as child processes
+        for pid in self.process_list:
+
+            parent_process = psutil.Process(pid)
+            children = parent_process.children(recursive=True)
+
+            for c in children:
+                c.terminate()
+
+            parent_process.terminate()
+
+        self.process_list = []
+
+
 def get_filename(parsed_url):
     filename = parsed_url.path.split('/')[-1]
     if parsed_url.query:
@@ -74,7 +99,7 @@ def get_filename(parsed_url):
     filename = filename.replace('%20', '_')
 
     if len(filename) >= 255:
-        filename = str(uuid.uuid4())[:8]+".pdf"
+        filename = str(uuid.uuid4())[:8] + ".pdf"
 
     return filename
 

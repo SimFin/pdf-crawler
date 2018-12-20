@@ -96,122 +96,134 @@ def make_element_id(element):
     return id_str
 
 
-def load_driver(url, executable_path):
-    driver_options = Options()
-    driver_options.headless = True
-    driver = webdriver.Firefox(executable_path=executable_path, options=driver_options)
+class ClickCrawler:
 
-    # Open url
-    driver.get(url)
+    def __init__(self, process_handler, executable_path, response, follow_foreign_hosts=False):
 
-    return driver
+        self.process_handler = process_handler
+        self.executable_path = executable_path
+        self.driver = None
+        self.handled = []
+        self.main_url = response.url
+        self.follow_foreign_hosts = follow_foreign_hosts
 
+        self.iterations_limit = 500
 
-def refresh_page(driver, main_url, executable_path):
-    try:
-        driver.refresh()
-    except InvalidSessionIdException:
-        driver = load_driver(main_url, executable_path)
+    def load_driver(self):
 
-    return driver
+        # kill all other spawned processes in case they are not terminated yet
+        self.process_handler.kill_all()
 
+        driver_options = Options()
+        driver_options.headless = True
+        self.driver = webdriver.Firefox(executable_path=self.executable_path, options=driver_options)
 
-def find_next_clickable_element(driver, main_url, handled, executable_path, tried_refresh=False):
-    try:
-        elements = driver.find_elements_by_css_selector("*")
+        self.process_handler.register_new_process(self.driver.service.process.pid)
 
-        # Go through all elements on page and look where the cursor is a pointer
-        for k, element in enumerate(elements):
-            if element.size['height'] > 0 and element.size['width'] > 0 and not is_valid_link(element.get_attribute("href")) and element.value_of_css_property(
-                    "cursor") == "pointer" and element.value_of_css_property("display") != "none":
-                el_id = make_element_id(element)
-                if el_id not in handled and el_id is not None:
-                    return element, el_id, driver
+        # Open url
+        self.driver.get(self.main_url)
 
-    except InvalidSessionIdException:
-        if not tried_refresh:
-            driver = load_driver(main_url, executable_path)
-            return find_next_clickable_element(driver, main_url, handled, executable_path, True)
+    def refresh_page(self):
+        try:
+            self.driver.refresh()
+        except InvalidSessionIdException:
+            self.load_driver()
 
-    return None, None, driver
+    def find_next_clickable_element(self, tried_refresh=False):
+        try:
+            elements = self.driver.find_elements_by_css_selector("*")
 
+            # Go through all elements on page and look where the cursor is a pointer
+            for k, element in enumerate(elements):
+                if element.size['height'] > 0 and element.size['width'] > 0 and not is_valid_link(element.get_attribute("href")) and element.value_of_css_property(
+                        "cursor") == "pointer" and element.value_of_css_property("display") != "none":
+                    el_id = make_element_id(element)
+                    if el_id not in self.handled and el_id is not None:
+                        return element, el_id
 
-def find_element_by_id(driver, element_id):
-    elements = driver.find_elements_by_css_selector("*")
+        except InvalidSessionIdException:
+            if not tried_refresh:
+                self.load_driver()
+                return self.find_next_clickable_element(True)
 
-    for el in elements:
-        el_id = make_element_id(el)
-        if el_id == element_id:
-            return el
-    return None
+        return None, None
 
+    def find_element_by_id(self, element_id):
+        elements = self.driver.find_elements_by_css_selector("*")
 
-def get_new_urls_with_click(driver, click_next_element, next_element_id, base_url, executable_path, tried_refresh=False):
-    new_urls_on_page = []
+        for el in elements:
+            el_id = make_element_id(el)
+            if el_id == element_id:
+                return el
+        return None
 
-    if click_next_element is None:
-        click_next_element = find_element_by_id(driver, next_element_id)
-        if click_next_element is None:
-            return new_urls_on_page, driver
+    def get_new_urls_with_click(self, click_next_element, next_element_id, tried_refresh=False):
 
-    try:
-        click_next_element.click()
-
-        if driver.current_url != base_url:
-            # reload the page if the url changed
-            driver.get(base_url)
-
-        # sleep to allow for eventual ajax to load
-        time.sleep(3)
-
-        new_urls_on_page = [link.get_attribute("href") for link in \
-                            driver.find_elements_by_css_selector("a") \
-                            if is_valid_link(link.get_attribute("href"))]
-
-    except ElementClickInterceptedException:
-        if not tried_refresh:
-            # couldn't click on element, try once again with page refresh
-            driver = refresh_page(driver, base_url, executable_path)
-            return get_new_urls_with_click(driver, None, next_element_id, base_url, executable_path, True)
-    except Exception:
-        pass
-
-    return new_urls_on_page, driver
-
-
-def get_hrefs_js_complex(response, follow_foreign_hosts=False, executable_path='geckodriver'):
-    urls = []
-    parsed_response_url = urlparse(response.url)
-
-    # get driver
-    driver = load_driver(response.url, executable_path)
-
-    base_url = driver.current_url
-
-    urls_on_page = [link.get_attribute("href") for link in \
-                    driver.find_elements_by_css_selector("a") \
-                    if is_valid_link(link.get_attribute("href"))]
-
-    urls += handle_url_list_js(urls, urls_on_page, parsed_response_url, follow_foreign_hosts)
-
-    # get clickable elements
-    handled_elements = []
-    iterations = 0
-    while iterations < 500:
-
-        iterations += 1
-
-        click_next_element, next_id, driver = find_next_clickable_element(driver, response.url, handled_elements, executable_path)
+        new_urls_on_page = []
 
         if click_next_element is None:
-            break
+            click_next_element = self.find_element_by_id(next_element_id)
+            if click_next_element is None:
+                return new_urls_on_page
 
-        handled_elements.append(next_id)
+        try:
+            click_next_element.click()
 
-        new_urls_on_page, driver = get_new_urls_with_click(driver, click_next_element, next_id, base_url, executable_path)
+            if self.driver.current_url != self.main_url:
+                # reload the page if the url changed
+                self.driver.get(self.main_url)
+            else:
+                # sleep to allow for eventual ajax to load
+                time.sleep(3)
 
-        urls += handle_url_list_js(urls, new_urls_on_page, parsed_response_url, follow_foreign_hosts)
+                new_urls_on_page = [link.get_attribute("href") for link in \
+                                    self.driver.find_elements_by_css_selector("a") \
+                                    if is_valid_link(link.get_attribute("href"))]
 
-    driver.close()
+        except ElementClickInterceptedException:
+            if not tried_refresh:
+                # couldn't click on element, try once again with page refresh
+                self.refresh_page()
+                return self.get_new_urls_with_click(None, next_element_id, True)
+        except Exception:
+            pass
 
-    return urls
+        return new_urls_on_page
+
+    def get_hrefs_js_complex(self):
+        urls = []
+        parsed_response_url = urlparse(self.main_url)
+
+        # get driver
+        self.load_driver()
+
+        self.main_url = self.driver.current_url
+
+        urls_on_page = [link.get_attribute("href") for link in \
+                        self.driver.find_elements_by_css_selector("a") \
+                        if is_valid_link(link.get_attribute("href"))]
+
+        urls += handle_url_list_js(urls, urls_on_page, parsed_response_url, self.follow_foreign_hosts)
+
+        # get clickable elements
+        self.handled = []
+        iterations = 0
+        while iterations < self.iterations_limit:
+
+            iterations += 1
+
+            click_next_element, next_id = self.find_next_clickable_element()
+
+            if click_next_element is None:
+                break
+
+            self.handled.append(next_id)
+
+            new_urls_on_page = self.get_new_urls_with_click(click_next_element, next_id)
+
+            urls += handle_url_list_js(urls, new_urls_on_page, parsed_response_url, self.follow_foreign_hosts)
+
+        self.driver.close()
+        self.process_handler.kill_all()
+
+        return urls

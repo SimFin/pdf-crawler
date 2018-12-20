@@ -1,23 +1,23 @@
-
 from crawler.helper import get_content_type, call, clean_url
-from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, get_hrefs_js_complex
+from crawler.crawl_methods import get_hrefs_html, get_hrefs_js_simple, ClickCrawler
 
 
 class Crawler:
-    def __init__(self, downloader, get_handlers=None, head_handlers=None, follow_foreign_hosts=False, crawl_method="normal", gecko_path="geckodriver"):
+    def __init__(self, downloader, get_handlers=None, head_handlers=None, follow_foreign_hosts=False, crawl_method="normal", gecko_path="geckodriver", process_handler=None):
 
         # Crawler internals
         self.downloader = downloader
         self.get_handlers = get_handlers or {}
         self.head_handlers = head_handlers or {}
         self.session = self.downloader.session()
+        self.process_handler = process_handler
 
         # Crawler information
         self.handled = set()
         self.follow_foreign = follow_foreign_hosts
         self.executable_path_gecko = gecko_path
         # these file endings are excluded to speed up the crawling (assumed that urls ending with these strings are actual files)
-        self.file_endings_exclude = [".mp3",".wav",".mkv",".flv",".vob",".ogv",".ogg",".gif",".avi",".mov",".wmv",".mp4",".mp3",".mpg"]
+        self.file_endings_exclude = [".mp3", ".wav", ".mkv", ".flv", ".vob", ".ogv", ".ogg", ".gif", ".avi", ".mov", ".wmv", ".mp4", ".mp3", ".mpg"]
 
         # 3 possible values:
         # "normal" (default) => simple html crawling (no js),
@@ -78,7 +78,8 @@ class Crawler:
         if self.crawl_method == "rendered":
             urls = get_hrefs_js_simple(response, self.follow_foreign)
         elif self.crawl_method == "rendered-all":
-            urls = get_hrefs_js_complex(response, self.follow_foreign, self.executable_path_gecko)
+            click_crawler = ClickCrawler(self.process_handler, self.executable_path_gecko, response, self.follow_foreign)
+            urls = click_crawler.get_hrefs_js_complex()
         else:
             # plain html
             if self.crawl_method is not None and self.crawl_method != "normal":
@@ -86,4 +87,3 @@ class Crawler:
             urls = get_hrefs_html(response, self.follow_foreign)
 
         return urls
-
