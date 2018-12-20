@@ -79,7 +79,10 @@ class ProcessHandler:
         # kill all current processes in list as well as child processes
         for pid in self.process_list:
 
-            parent_process = psutil.Process(pid)
+            try:
+                parent_process = psutil.Process(int(pid))
+            except psutil._exceptions.NoSuchProcess:
+                continue
             children = parent_process.children(recursive=True)
 
             for c in children:
