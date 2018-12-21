@@ -44,17 +44,20 @@ def get_content_type(response):
 def call(session, url, use_proxy=False, retries=0):
     if use_proxy:
         proxy = pm.get_proxy()
-        try:
-            response = session.get(url, timeout=5, proxies=proxy[0])
-            response.raise_for_status()
-        except Exception as e:
-            if retries <= 3:
-                pm.change_proxy(proxy[1])
-                return call(session, url, True, retries + 1)
+        if proxy[0]:
+            try:
+                response = session.get(url, timeout=5, proxies=proxy[0])
+                response.raise_for_status()
+            except Exception as e:
+                if retries <= 3:
+                    pm.change_proxy(proxy[1])
+                    return call(session, url, True, retries + 1)
+                else:
+                    return None
             else:
-                return None
+                return response
         else:
-            return response
+            return None
     else:
         try:
             response = session.get(url, timeout=5)

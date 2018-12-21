@@ -61,7 +61,7 @@ class ProxyManager:
             self.get_list()
 
         if len(self.proxies) == 0:
-            return {}
+            return {}, None
 
         self.requests_counter += 1
 
@@ -69,7 +69,7 @@ class ProxyManager:
             self.change_proxy()
 
             if len(self.proxies) == 0:
-                return {}
+                return {}, None
 
         proxy_dict = {
             'http': "http://" + self.proxies[self.current_index]['ip'] + ":" + self.proxies[self.current_index]['port'],
