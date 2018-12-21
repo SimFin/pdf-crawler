@@ -141,7 +141,7 @@ class ClickCrawler:
                     if el_id not in self.handled and el_id is not None:
                         return element, el_id
 
-        except InvalidSessionIdException:
+        except Exception:
             if not tried_refresh:
                 self.load_driver()
                 return self.find_next_clickable_element(True)
