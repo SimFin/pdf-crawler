@@ -1,7 +1,6 @@
 import logging
 from functools import lru_cache
 from crawler.proxy import ProxyManager
-from requests.exceptions import ProxyError
 import re
 from urllib.parse import urlparse,urlunparse
 
@@ -48,14 +47,12 @@ def call(session, url, use_proxy=False, retries=0):
         try:
             response = session.get(url, timeout=5, proxies=proxy[0])
             response.raise_for_status()
-        except ProxyError:
+        except Exception as e:
             if retries <= 3:
                 pm.change_proxy(proxy[1])
                 return call(session, url, True, retries + 1)
             else:
                 return None
-        except Exception as e:
-            return None
         else:
             return response
     else:
