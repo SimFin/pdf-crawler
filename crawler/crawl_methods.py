@@ -126,7 +126,7 @@ class ClickCrawler:
     def refresh_page(self):
         try:
             self.driver.refresh()
-        except InvalidSessionIdException:
+        except Exception:
             self.load_driver()
 
     def find_next_clickable_element(self, tried_refresh=False):
@@ -180,13 +180,11 @@ class ClickCrawler:
                                     self.driver.find_elements_by_css_selector("a") \
                                     if is_valid_link(link.get_attribute("href"))]
 
-        except ElementClickInterceptedException:
+        except Exception:
             if not tried_refresh:
                 # couldn't click on element, try once again with page refresh
                 self.refresh_page()
                 return self.get_new_urls_with_click(None, next_element_id, True)
-        except Exception:
-            pass
 
         return new_urls_on_page
 
