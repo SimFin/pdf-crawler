@@ -46,7 +46,7 @@ def call(session, url, use_proxy=False, retries=0):
         proxy = pm.get_proxy()
         if proxy[0]:
             try:
-                response = session.get(url, timeout=5, proxies=proxy[0])
+                response = session.get(url, timeout=5, proxies=proxy[0], verify=False)
                 response.raise_for_status()
             except Exception as e:
                 if retries <= 3:
@@ -60,7 +60,7 @@ def call(session, url, use_proxy=False, retries=0):
             return None
     else:
         try:
-            response = session.get(url, timeout=5)
+            response = session.get(url, timeout=5, verify=False)
             response.raise_for_status()
         except Exception as e:
             # try with proxy
