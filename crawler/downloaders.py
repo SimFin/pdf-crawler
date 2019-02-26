@@ -1,6 +1,14 @@
 import random
-from fake_useragent import UserAgent
+import os
 from requests_html import HTMLSession
+
+
+def get_user_agent():
+    file_loc = os.path.join("crawler", '.user_agents')
+    ua_file = open(file_loc, 'r')
+    user_agents = ua_file.read().splitlines()
+    ua_file.close()
+    return random.choice(user_agents)
 
 
 class RequestsDownloader:
@@ -12,7 +20,7 @@ class RequestsDownloader:
 
     def _get_fake_headers(self):
         return {
-            'User-Agent': self._get_user_agent(),
+            'User-Agent': get_user_agent(),
             'Accept': 'text/html,application/xhtml+xml,'
                       'application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate, sdch',
@@ -22,17 +30,3 @@ class RequestsDownloader:
             'Cache-Control': 'max-age=0',
             'Pragma': 'no-cache',
         }
-
-    def _get_user_agent(self):
-        try:
-            ua_file = open('.user_agents', 'r')
-            user_agents = ua_file.read().splitlines()
-        except FileNotFoundError:
-            ua_file = open('.user_agents', 'w')
-            ua = UserAgent()
-            user_agents = ua.data_browsers['chrome']
-            for user_agent in user_agents:
-                ua_file.write(f'{user_agent}\n')
-        finally:
-            ua_file.close()
-            return random.choice(user_agents)

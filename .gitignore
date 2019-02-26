@@ -106,4 +106,3 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-.user_agents

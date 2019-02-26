@@ -1,7 +1,7 @@
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
 import datetime
+from crawler.downloaders import get_user_agent
 
 
 class ProxyManager:
@@ -18,13 +18,13 @@ class ProxyManager:
 
     def get_list(self):
 
-        ua = UserAgent()
+        ua = get_user_agent()
         self.proxies = []
         self.current_index = 0
         self.requests_counter = 0
 
         proxies_req = Request('https://www.sslproxies.org/')
-        proxies_req.add_header('User-Agent', ua.random)
+        proxies_req.add_header('User-Agent', ua)
         proxies_doc = urlopen(proxies_req).read().decode('utf8')
 
         soup = BeautifulSoup(proxies_doc, 'html.parser')

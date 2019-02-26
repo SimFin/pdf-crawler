@@ -6,7 +6,6 @@ setup(
     install_requires=[
         'beautifulsoup4',
         'click',
-        'fake_useragent',
         'requests',
         'selenium',
         'requests_html'
