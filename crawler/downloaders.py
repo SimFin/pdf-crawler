@@ -4,7 +4,8 @@ from requests_html import HTMLSession
 
 
 def get_user_agent():
-    file_loc = os.path.join("crawler", '.user_agents')
+    dirname = os.path.dirname(__file__)
+    file_loc = os.path.join(dirname, '.user_agents')
     ua_file = open(file_loc, 'r')
     user_agents = ua_file.read().splitlines()
     ua_file.close()
