@@ -49,10 +49,10 @@ class CSVStatsPDFHandler:
         name = self.name or parsed_url.netloc
         output = os.path.join(self.directory, name + '.csv')
         if not os.path.isfile(output):
-            with open(output, 'w') as file:
+            with open(output, 'w', newline='') as file:
                 csv.writer(file).writerow(self._FIELDNAMES)
 
-        with open(output, 'a') as file:
+        with open(output, 'a', newline='') as file:
             writer = csv.DictWriter(file, self._FIELDNAMES)
             filename = get_filename(parsed_url)
             row = {
