@@ -8,7 +8,8 @@ setup(
         'click',
         'requests',
         'selenium',
-        'requests_html'
+        'requests_html',
+        'psutil'
     ],
     extras_require={
         'tests': [
